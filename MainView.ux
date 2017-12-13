@@ -1,7 +1,7 @@
 <App>
     <Android.StatusBarConfig Color="Black" />
     
-    <ColorGen ux:Name="gen" Hue="0.0" Saturation="1.0" Value="1.0" Mode="Triad" />
+    <Fuse.Colors.Palette ux:Name="gen" Hue="0.0" Saturation="1.0" Value="1.0" Mode="Triad" />
 
     <ClientPanel>
         <DockPanel>
@@ -34,6 +34,16 @@
                     <Slider Value="{Property gen.Hue}" Minimum="0" Maximum="6.24" />
                     <Slider Value="{Property gen.Saturation}" Minimum="0" Maximum="1"/>
                     <Slider Value="{Property gen.Value}" Minimum="0" Maximum="1"/>
+                    <Grid ColumnCount="3">
+                        <Slider Value="{Property gen.DriveR}" Minimum="-0.99" Maximum="0.99"/>
+                        <Slider Value="{Property gen.DriveG}" Minimum="-0.99" Maximum="0.99"/>
+                        <Slider Value="{Property gen.DriveB}" Minimum="-0.99" Maximum="0.99"/>
+                    </Grid>
+                    <Grid ColumnCount="3">
+                        <Slider Value="{Property gen.ScaleR}" Minimum="0" Maximum="1"/>
+                        <Slider Value="{Property gen.ScaleG}" Minimum="0" Maximum="1"/>
+                        <Slider Value="{Property gen.ScaleB}" Minimum="0" Maximum="1"/>
+                    </Grid>
                 </StackPanel>
             </StackPanel>
         </DockPanel>

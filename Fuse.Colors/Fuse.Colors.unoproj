@@ -1,11 +1,11 @@
 {
-  "RootNamespace":"",
+  "Title": "Fuse.Camera",
   "Packages": [
     "Fuse",
     "FuseJS"
   ],
   "Includes": [
-    "*"
+    "Palette.uno"
   ]
 }
 
