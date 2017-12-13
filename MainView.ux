@@ -1,0 +1,41 @@
+<App>
+    <Android.StatusBarConfig Color="Black" />
+    
+    <ColorGen ux:Name="gen" Hue="0.0" Saturation="1.0" Value="1.0" Mode="Triad" />
+
+    <ClientPanel>
+        <DockPanel>
+            <Grid RowCount="5">
+                <Panel Color="{Property gen.C1}"/>
+                <Panel Color="{Property gen.C2}"/>
+                <Panel Color="{Property gen.C3}"/>
+                <Panel Color="{Property gen.C4}"/>
+                <Panel Color="{Property gen.C5}"/>
+            </Grid>
+            <StackPanel Dock="Bottom" Margin="16">
+                <Grid ColumnCount="3" >
+                    <Button Text="Triad">
+                        <Tapped>
+                            <Set gen.Mode="Triad"/>
+                        </Tapped>
+                    </Button>
+                    <Button Text="Complementary">
+                        <Tapped>
+                            <Set gen.Mode="Complementary"/>
+                        </Tapped>
+                    </Button>
+                    <Button Text="Shades">
+                        <Tapped>
+                            <Set gen.Mode="Shades"/>
+                        </Tapped>
+                    </Button>
+                </Grid>
+                <StackPanel>
+                    <Slider Value="{Property gen.Hue}" Minimum="0" Maximum="6.24" />
+                    <Slider Value="{Property gen.Saturation}" Minimum="0" Maximum="1"/>
+                    <Slider Value="{Property gen.Value}" Minimum="0" Maximum="1"/>
+                </StackPanel>
+            </StackPanel>
+        </DockPanel>
+    </ClientPanel>
+</App>
