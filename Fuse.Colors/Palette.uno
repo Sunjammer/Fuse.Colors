@@ -4,10 +4,35 @@ using Uno;
 using Uno.UX;
 namespace Fuse.Colors{
 
-    class ColorWheel{
-        
-        static float3 HSVtoRGB(float h, float s, float v) {
-            h = (h + 0.5f) * 2.0f / 2.0f;
+    class ColorSpace{
+        public static float3 RGB2HSV(float r, float g, float b) {
+            var max = Math.Max(Math.Max(r, g), b);
+            var min = Math.Min(Math.Min(r, g), b);
+            var h = max;
+            var s = max;
+            var v = max;
+
+            var d = max - min;
+            s = max == 0f ? 0f : d / max;
+
+            if (max == min) {
+                h = 0f; // achromatic
+            } else {
+                if(max==r){
+                    h = (g - b) / d + (g < b ? 6 : 0); 
+                }else if(max==g){
+                    h = (b - r) / d + 2; 
+                }else if(max==b){
+                    h = (r - g) / d + 4; 
+                }
+                h /= 6;
+            }
+
+            return float3(h, s, v);
+        }
+
+        public static float3 HSV2RGB(float h, float s, float v) {
+            //h = (h + 0.5f) * 2.0f / 2.0f;
             float r = 0.0f;
             float g = 0.0f;
             float b = 0.0f;
@@ -37,16 +62,17 @@ namespace Fuse.Colors{
             }
             return float3(r,g,b);
         }
-
-
-        public static float3 Sample(float2 vec, float sat = 1.0f, float val = 1.0f){
+    }
+    class ColorWheel{
+        
+        public static float3 Sample(float2 vec, float sat, float val, float3 hsvOffset){
             float dist = Math.Sqrt(vec.X * vec.X + vec.Y * vec.Y);
-            float saturation = dist;
+            float saturation = hsvOffset.Y * dist;
             float angle = Math.Atan2(vec.Y, vec.X) / 6.28f;
-            float v = 1.0f;
+            float v = hsvOffset.Z;
             if(dist>1.0f)
                 saturation = val = 0.0f;
-            return HSVtoRGB(angle, saturation*sat, v*val);
+            return ColorSpace.HSV2RGB(angle+hsvOffset.X, saturation*sat, v*val);
         }
     }
 
@@ -141,20 +167,11 @@ namespace Fuse.Colors{
             float py = vec.X * sn + vec.Y * cs;
             return float2(px, py);
         }
-
-        override protected void OnRooted(){
-            init();
-            base.OnRooted(); 
-        }
-
-        void init(){
-            Mode = ColorGenMode.Complementary;
-        }
         
         void rebuild(){
             _palette = new float4[5];
             Sample[] samples;
-            Sample basis = new Sample(angleToVec((float)Hue), 1.0f, 1.0f);
+            Sample basis = new Sample(angleToVec((float)Hue*6.28f), 1.0f, 1.0f);
             switch(Mode){
                 case ColorGenMode.Complementary:
                     samples = Complementary(basis);
@@ -171,15 +188,11 @@ namespace Fuse.Colors{
                 float3 clr = ColorWheel.Sample(
                     s.vec * s.amp, 
                     (float)_saturation, 
-                    s.v * (float)_value);
+                    s.v * (float)_value,
+                    _baseColorHSV);
 
-                clr.X = shape(clr.X, Drive.X);
-                clr.Y = shape(clr.Y, Drive.Y);
-                clr.Z = shape(clr.Z, Drive.Z);
-
-                clr.X = clr.X * Scale.X;
-                clr.Y = clr.Y * Scale.Y;
-                clr.Z = clr.Z * Scale.Z;
+                clr += Gain;
+                clr *= Scale;
 
                 _palette[i] = float4(clr, 1.0f);
             }
@@ -194,6 +207,17 @@ namespace Fuse.Colors{
             }
             set{
                 _mode = value;
+                rebuild();
+            }
+        }
+
+        float3 _baseColor;
+        float3 _baseColorHSV = float3(0.0f, 1.0f, 1.0f);
+        public float3 BaseColor{
+            get { return _baseColor; }
+            set { 
+                _baseColor = value; 
+                _baseColorHSV = ColorSpace.RGB2HSV(_baseColor.X, _baseColor.Y, _baseColor.Z);
                 rebuild();
             }
         }
@@ -220,25 +244,25 @@ namespace Fuse.Colors{
             }
         }
 
-        float3 _drive;
-        public float3 Drive{
-            get{ return _drive; }
-            set{ _drive = value; rebuild(); }
+        float3 _gain;
+        public float3 Gain{
+            get{ return _gain; }
+            set{ _gain = value; rebuild(); }
         }
 
-        public float DriveR{
-            get{ return _drive.X; }
-            set{ _drive.X = value; rebuild(); }
+        public float GainR{
+            get{ return _gain.X; }
+            set{ _gain.X = value; rebuild(); }
         }
 
-        public float DriveG{
-            get{ return _drive.Y; }
-            set{ _drive.Y = value; rebuild(); }
+        public float GainG{
+            get{ return _gain.Y; }
+            set{ _gain.Y = value; rebuild(); }
         }
 
-        public float DriveB{
-            get{ return _drive.Z; }
-            set{ _drive.Z = value; rebuild(); }
+        public float GainB{
+            get{ return _gain.Z; }
+            set{ _gain.Z = value; rebuild(); }
         }
 
         float3 _scale = float3(1.0f);
