@@ -1,7 +1,7 @@
 <App>
     <Android.StatusBarConfig Color="Black" />
     
-    <Fuse.Colors.Palette ux:Name="gen" Mode="Complementary" />
+    <Fuse.Colors.Palette ux:Name="gen" BaseColor="#5A7684" Mode="Complementary" />
 
     <JavaScript>
         const O = require("FuseJS/Observable")
@@ -20,11 +20,11 @@
         <Panel ux:Name="fullscreen"/>
         <DockPanel>
             <Grid ux:Name="colors" RowCount="5">
-                <Panel Color="{Property gen.C1}"/>
-                <Panel Color="{Property gen.C2}"/>
-                <Panel Color="{Property gen.C3}"/>
-                <Panel Color="{Property gen.C4}"/>
-                <Panel Color="{Property gen.C5}"/>
+                <Panel Color="{ReadProperty gen.C1}"/>
+                <Panel Color="{ReadProperty gen.C2}"/>
+                <Panel Color="{ReadProperty gen.C3}"/>
+                <Panel Color="{ReadProperty gen.C4}"/>
+                <Panel Color="{ReadProperty gen.C5}"/>
                 <Tapped Handler="{toggleState}"/>
                 <LayoutAnimation>
                     <Resize Vector="1" RelativeTo="LayoutChange" Easing="BackIn" Duration="0.1"/>
@@ -32,8 +32,8 @@
             </Grid>
 
             <StackPanel Dock="Bottom" >
-                <Grid ColumnCount="3" Margin="0, 16">
-                    <Button Text="Triad">
+                <Grid ColumnCount="3">
+                    <Button Text="Triad" Margin="16">
                         <Tapped>
                             <Set gen.Mode="Triad"/>
                         </Tapped>
@@ -49,31 +49,31 @@
                         </Tapped>
                     </Button>
                 </Grid>
-                <StackPanel Padding="16">
-                    <Grid Columns="120,1*">
-                        <Text Value="Hue" />
-                        <Slider Value="{Property gen.Hue}" Minimum="0" Maximum="1"/>
+                <StackPanel Margin="16" >
+                    <Grid Columns="1*,3*" Margin="8">
+                        <Text Value="Hue" Alignment="CenterLeft"/>
+                        <Slider Value="{Property gen.Hue}" Margin="8" Minimum="0" Maximum="1"/>
                     </Grid>
-                    <Grid Columns="120,1*">
-                        <Text Value="Saturation" />
+                    <Grid Columns="1*,3*" Margin="8">
+                        <Text Value="Saturation" Alignment="CenterLeft" />
                         <Slider Value="{Property gen.Saturation}" Minimum="0" Maximum="1"/>
                     </Grid>
-                    <Grid Columns="120,1*">
-                        <Text Value="Value" />
+                    <Grid Columns="1*,3*" Margin="8">
+                        <Text Value="Value" Alignment="CenterLeft" />
                         <Slider Value="{Property gen.Value}" Minimum="0" Maximum="1"/>
                     </Grid>
                     <Grid ColumnCount="3">
                         <DockPanel>
                             <Text Value="R+" Margin="8" Dock="Left"/>
-                            <Slider Value="{Property gen.ScaleR}" Minimum="0" Maximum="1"/>
+                            <Slider Value="{Property gen.GainR}" Minimum="0" Maximum="1"/>
                         </DockPanel>
                         <DockPanel>
                             <Text Value="G+" Margin="8" Dock="Left"/>
-                            <Slider Value="{Property gen.ScaleG}" Minimum="0" Maximum="1"/>
+                            <Slider Value="{Property gen.GainG}" Minimum="0" Maximum="1"/>
                         </DockPanel>
                         <DockPanel>
                             <Text Value="B+" Margin="8" Dock="Left"/>
-                            <Slider Value="{Property gen.ScaleB}" Minimum="0" Maximum="1"/>
+                            <Slider Value="{Property gen.GainB}" Minimum="0" Maximum="1"/>
                         </DockPanel>
                     </Grid>
                     <Grid ColumnCount="3">
