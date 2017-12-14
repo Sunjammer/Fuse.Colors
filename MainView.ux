@@ -3,5 +3,4 @@
     <ClientPanel>
         <Fuse.Colors.Editor Palette="palette"/>
     </ClientPanel>
-
 </App>

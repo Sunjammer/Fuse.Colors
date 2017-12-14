@@ -355,12 +355,18 @@ namespace Fuse.Colors{
             get {
                 return _palette[0];
             }
+            set {
+
+            }
         }
 
         static Selector _c2Name = "C2";
         public float4 C2{
             get {
                 return _palette[1];
+            }
+            set {
+                
             }
         }
 
@@ -369,6 +375,9 @@ namespace Fuse.Colors{
             get {
                 return _palette[2];
             }
+            set {
+                
+            }
         }
 
         static Selector _c4Name = "C4";
@@ -376,12 +385,18 @@ namespace Fuse.Colors{
             get {
                 return _palette[3];
             }
+            set {
+                
+            }
         }
 
         static Selector _c5Name = "C5";
         public float4 C5{
             get {
                 return _palette[4];
+            }
+            set {
+                
             }
         }
     }
