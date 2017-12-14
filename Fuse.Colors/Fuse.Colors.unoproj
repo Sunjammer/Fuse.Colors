@@ -5,7 +5,7 @@
     "FuseJS"
   ],
   "Includes": [
-    "Palette.uno"
+    "*"
   ]
 }
 

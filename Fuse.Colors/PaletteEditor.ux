@@ -1,0 +1,141 @@
+<Panel ux:Class="Fuse.Colors.Editor">
+    <Fuse.Colors.Palette ux:Dependency="Palette" />
+
+    <JavaScript>
+        var O = require("FuseJS/Observable")
+        var isExpanded = O(false)
+        var modes = ["Complementary", "Triad", "Shades"]
+        var mode = O(modes[0])
+        var c1 = O()
+        module.exports = {
+            c1 : c1,
+            mode : mode,
+            isExpanded : isExpanded,
+            modes : modes,
+            numModes : modes.length,
+            changeMode : function(args) {
+                mode.clear()
+                mode.value = args.data
+            },
+            toggleState : function() { isExpanded.value = !isExpanded.value },
+            printSettings : function() {
+                var s = Palette.getSettings();
+console.log(`\n<Fuse.Colors.Palette 
+    ux:Name="palette" 
+    Mode="${s.Mode}" 
+    Hue="${s.Hue}" 
+    Saturation="${s.Saturation}" 
+    Value="${s.Value}"
+    Gain="${s.Gain}"
+    Scale="${s.Scale}"/>`)
+            },
+            printColors : function() {
+                function toRGBA(c){
+                    c = c.map(f => Math.floor(f*255))
+                    function componentToHex(c) {
+                        var hex = c.toString(16);
+                        return hex.length == 1 ? "0" + hex : hex;
+                    }
+                    return c.reduce((acc, current) => acc+componentToHex(current), "#")
+                }
+
+                var p = Palette.getColors();
+                var out = ""
+                for(var i=0; i<p.length; i++){
+                    var clr = p[i]
+                    out += `<float4 ux:Global="Color${i+1}" ux:Value="${toRGBA(clr)}" />\n`
+                }
+                console.log("Palette: \n"+out);
+            }
+        }
+    </JavaScript>
+
+    <!-- This is a war crime -->
+    <WhileNotEmpty Items="{mode}">
+        <Set Palette.Mode="{mode}"/>
+    </WhileNotEmpty>
+    <!-- end war crime -->
+
+    <Rectangle ux:InnerClass="EditorButton" Label="default" Color="#EEE" CornerRadius="5">
+        <string ux:Property="Label"/>
+        <Text Value="{ReadProperty Label}" Font="Bold" FontSize="12" Alignment="Center" Margin="8"/>
+        <WhilePressed>
+            <Change this.Color="#DDD"/>
+        </WhilePressed>
+    </Rectangle>
+
+    <DockPanel ux:InnerClass="EditorSlider" Min="0" Max="1" Margin="0, 4" >
+        <object ux:Property="Target"/>
+        <string ux:Property="Label"/>
+        <float ux:Property="Min"/>
+        <float ux:Property="Max"/>
+        <Text Value="{ReadProperty Label}" Alignment="VerticalCenter" Font="Bold" FontSize="12" Margin="8" Dock="Left"/>
+        <Slider Value="{Property Target}" Minimum="{ReadProperty Min}" Maximum="{ReadProperty Max}"/>
+    </DockPanel>
+
+    <WhileTrue Value="{isExpanded}">
+        <Change colors.LayoutMaster="fullscreen"/>
+    </WhileTrue>
+    <WhileFalse Value="{isExpanded}" Bypass="Never">
+        <Move Target="printButtons" X="width(printButtons)+8" Easing="BackIn" Duration="0.4" DelayBack="0.4"/>
+    </WhileFalse>
+    
+    <Panel ux:Name="fullscreen"/>
+
+    <DockPanel>
+        <Panel ux:Name="colors">
+            <StackPanel ux:Name="printButtons" Alignment="BottomRight" Opacity="0.5" Margin="8" ItemSpacing="8">
+                <EditorButton ux:Name="printSettings" Label="Print settings">
+                    <Tapped Handler="{printSettings}"/>
+                    <Shadow Size="16" Color="0,0,0,0.1" />
+                </EditorButton>
+                <EditorButton ux:Name="printButton" Label="Print palette">
+                    <Tapped Handler="{printColors}"/>
+                    <Shadow Size="16" Color="0,0,0,0.1" />
+                </EditorButton>
+            </StackPanel>
+            <Grid  RowCount="5">
+                <Panel Color="{ReadProperty Palette.C1}"/>
+                <Panel Color="{ReadProperty Palette.C2}"/>
+                <Panel Color="{ReadProperty Palette.C3}"/>
+                <Panel Color="{ReadProperty Palette.C4}"/>
+                <Panel Color="{ReadProperty Palette.C5}"/>
+                <Pressed>
+                    <Callback Handler="{toggleState}"/>
+                </Pressed>
+            </Grid>
+            <LayoutAnimation>
+                <Resize Vector="1" RelativeTo="LayoutChange" Easing="BackIn" Duration="0.4"/>
+            </LayoutAnimation>
+        </Panel>
+
+        <StackPanel Dock="Bottom">
+            <Grid ColumnCount="{numModes}" Margin="8">
+                <Each Items="{modes}">
+                    <EditorButton ux:Name="btn" Label="{}" Margin="8">
+                        <Tapped Handler="{changeMode}"/>
+                        <WhileTrue Value="{} != {mode}">
+                            <Change btn.Opacity="0.5"/>
+                        </WhileTrue>
+                    </EditorButton>
+                </Each>
+            </Grid>
+            <StackPanel Margin="16,0,16,16" >
+            
+                <EditorSlider Label="Hue" Target="{Property Palette.Hue}"/>
+                <EditorSlider Label="Saturation" Target="{Property Palette.Saturation}"/>
+                <EditorSlider Label="Value" Target="{Property Palette.Value}"/>
+                <Grid ColumnCount="3">
+                    <EditorSlider Label="R+" Target="{Property Palette.GainR}"/>
+                    <EditorSlider Label="G+" Target="{Property Palette.GainG}"/>
+                    <EditorSlider Label="B+" Target="{Property Palette.GainB}"/>
+                </Grid>
+                <Grid ColumnCount="3">
+                    <EditorSlider Label="R*" Target="{Property Palette.ScaleR}"/>
+                    <EditorSlider Label="G*" Target="{Property Palette.ScaleG}"/>
+                    <EditorSlider Label="B*" Target="{Property Palette.ScaleB}"/>
+                </Grid>
+            </StackPanel>
+        </StackPanel>
+    </DockPanel>
+</Panel>

@@ -2,6 +2,7 @@ using Fuse.Controls;
 using Uno.Collections;
 using Uno;
 using Uno.UX;
+using Fuse.Scripting;
 namespace Fuse.Colors{
 
     class ColorSpace{
@@ -16,7 +17,7 @@ namespace Fuse.Colors{
             s = max == 0f ? 0f : d / max;
 
             if (max == min) {
-                h = 0f; // achromatic
+                h = 0f;
             } else {
                 if(max==r){
                     h = (g - b) / d + (g < b ? 6 : 0); 
@@ -33,14 +34,14 @@ namespace Fuse.Colors{
 
         public static float3 HSV2RGB(float h, float s, float v) {
             //h = (h + 0.5f) * 2.0f / 2.0f;
-            float r = 0.0f;
-            float g = 0.0f;
-            float b = 0.0f;
-            float i = 0.0f;
-            float f = 0.0f;
-            float p = 0.0f;
-            float q = 0.0f;
-            float t = 0.0f;
+            float r = 0f;
+            float g = 0f;
+            float b = 0f;
+            float i = 0f;
+            float f = 0f;
+            float p = 0f;
+            float q = 0f;
+            float t = 0f;
             i = Math.Floor(h * 6);
             f = h * 6 - i;
             p = v * (1 - s);
@@ -70,22 +71,22 @@ namespace Fuse.Colors{
             float saturation = hsvOffset.Y * dist;
             float angle = Math.Atan2(vec.Y, vec.X) / 6.28f;
             float v = hsvOffset.Z;
-            if(dist>1.0f)
-                saturation = val = 0.0f;
+            if(dist>1f)
+                saturation = val = 0f;
             return ColorSpace.HSV2RGB(angle+hsvOffset.X, saturation*sat, v*val);
         }
     }
 
     public enum ColorGenMode{
-        Triad,
-        Complementary,
-        Shades
+        Triad = 0,
+        Complementary = 1,
+        Shades = 2
     }
 
-    struct Sample{
+    struct SampleVec{
         public float2 vec;
         public float amp, v;
-        public Sample(float2 inDirection, float inAmplitude, float inVal){
+        public SampleVec(float2 inDirection, float inAmplitude, float inVal){
             vec = inDirection;
             amp = inAmplitude;
             v = inVal;
@@ -93,74 +94,110 @@ namespace Fuse.Colors{
     }
 
     public class Palette : Panel{
-        // Sample modes
-        Sample[] Complementary(Sample basis)
+
+        
+		static Palette()
+		{
+			ScriptClass.Register(typeof(Palette),
+				new ScriptMethod<Palette>("getColors", (Func<Context, Palette, object[], object>)getColors, ExecutionThread.JavaScript),
+				new ScriptMethod<Palette>("getSettings", (Func<Context, Palette, object[], object>)getSettings, ExecutionThread.JavaScript)
+                );
+		}
+		
+		static object getColors(Context c, Palette s, object[] args)
+		{
+            var a = c.NewArray();
+            for(int i = 0; i<s.Colors.Length; i++){
+                var ca = c.NewArray();
+                ca[0] = s.Colors[i].X;
+                ca[1] = s.Colors[i].Y;
+                ca[2] = s.Colors[i].Z;
+                ca[3] = s.Colors[i].W;
+                a[i] = ca;
+            }
+            return a;
+		}
+
+        static object getSettings(Context c, Palette s, object[] args)
         {
-            var output = new Sample[5];
-            output[0] = new Sample(basis.vec, basis.amp, basis.v * 0.7f);
-            output[1] = new Sample(basis.vec, basis.amp*0.8f, basis.v);
+            var ob = c.NewObject();
+            ob["Hue"] = s.Hue;
+            ob["Saturation"] = s.Saturation;
+            ob["Value"] = s.Value;
+            ob["Gain"] = s.Gain+"";
+            ob["Mode"] = s.Mode+"";
+            ob["Scale"] = s.Scale+"";
+            return ob;
+        }
 
-            var reflected = new Sample(rotate(basis.vec, degRad(180)), basis.amp*0.8f, basis.v);
+        // Sample modes
+        static SampleVec[] Complementary(SampleVec basis)
+        {
+            var output = new SampleVec[5];
+            output[0] = new SampleVec(basis.vec, basis.amp, basis.v * 0.7f);
+            output[1] = new SampleVec(basis.vec, basis.amp*0.8f, basis.v);
+
+            var reflected = new SampleVec(Rotate(basis.vec, DegRad(180)), basis.amp*0.8f, basis.v);
             output[2] = reflected;
-            output[3] = new Sample(reflected.vec, reflected.amp*0.7f, reflected.v * 0.7f);
-            output[4] = new Sample(reflected.vec, reflected.amp*0.4f, reflected.v);
+            output[3] = new SampleVec(reflected.vec, reflected.amp*0.7f, reflected.v * 0.7f);
+            output[4] = new SampleVec(reflected.vec, reflected.amp*0.4f, reflected.v);
 
             return output;
         }
 
-        Sample[] Shades(Sample basis){
-            var output = new Sample[5];
+        static SampleVec[] Shades(SampleVec basis){
+            var output = new SampleVec[5];
             output[0] = basis;
-            output[1] = new Sample(basis.vec, basis.amp, basis.v * 0.9f);
-            output[2] = new Sample(basis.vec, basis.amp, basis.v * 0.7f);
-            output[3] = new Sample(basis.vec, basis.amp, basis.v * 0.5f);
-            output[4] = new Sample(basis.vec, basis.amp, basis.v * 0.4f);
+            output[1] = new SampleVec(basis.vec, basis.amp, basis.v * 0.9f);
+            output[2] = new SampleVec(basis.vec, basis.amp, basis.v * 0.7f);
+            output[3] = new SampleVec(basis.vec, basis.amp, basis.v * 0.5f);
+            output[4] = new SampleVec(basis.vec, basis.amp, basis.v * 0.4f);
             return output;
         }
 
-        Sample[] Triad(Sample basis){
-            var output = new Sample[5];
+        static SampleVec[] Triad(SampleVec basis){
+            var output = new SampleVec[5];
 
             output[0] = basis;
 
-            float offsetAngle = degRad(360.0f/3.0f-5.0f);
-            var offsetA = new Sample(rotate(basis.vec, offsetAngle), basis.amp*0.8f, 1.0f);
+            float offsetAngle = DegRad(360.0f/3.0f-5.0f);
+            var offsetA = new SampleVec(Rotate(basis.vec, offsetAngle), basis.amp*0.8f, 1.0f);
             output[1] = offsetA;
-            output[2] = new Sample(offsetA.vec, offsetA.amp*0.8f, 0.7f);
+            output[2] = new SampleVec(offsetA.vec, offsetA.amp*0.8f, 0.7f);
 
-            var offsetB = new Sample(rotate(basis.vec, -offsetAngle), basis.amp*0.8f, 1.0f);
+            var offsetB = new SampleVec(Rotate(basis.vec, -offsetAngle), basis.amp*0.8f, 1.0f);
             output[3] = offsetB;
-            output[4] = new Sample(offsetB.vec, offsetB.amp*0.7f, 0.7f);
+            output[4] = new SampleVec(offsetB.vec, offsetB.amp*0.7f, 0.7f);
             return output;
         }
 
         //
         
-        float degRad(float deg){
+        static float DegRad(float deg){
             return deg * 3.14f/180f;
         }
 
-        float2 angleToVec(float angle){
-            var x = 1.0f;
-            var y = 0.0f;
-            return normalize(rotate(float2(x,y), angle));
+        static float2 AngleToVec(float angle){
+            var x = 1f;
+            var y = 0f;
+            return Normalize(Rotate(float2(x,y), angle));
         }
 
-        float length(float2 vec){
+        static float LengthOf(float2 vec){
             return Math.Sqrt(vec.X*vec.X+vec.Y*vec.Y);
         }
 
-        float2 normalize(float2 vec){
-            var len = length(vec);
+        static float2 Normalize(float2 vec){
+            var len = LengthOf(vec);
             return float2(vec.X/len, y:vec.Y/len);
         }
 
-        float shape(float v, float d){
-			var k = 2.0f * d / (1.0f - d);
-			return (1.0f + k) * v / (1.0f + k * Math.Abs(v));
+        static float Shape(float v, float d){
+			var k = 2f * d / (1f - d);
+			return (1f + k) * v / (1f + k * Math.Abs(v));
 		}
 
-        float2 rotate(float2 vec, float angle){
+        static float2 Rotate(float2 vec, float angle){
             float cs = Math.Cos(angle);
             float sn = Math.Sin(angle);
             float px = vec.X * cs - vec.Y * sn; 
@@ -168,10 +205,10 @@ namespace Fuse.Colors{
             return float2(px, py);
         }
         
-        void rebuild(){
+        void Rebuild(){
             _palette = new float4[5];
-            Sample[] samples;
-            Sample basis = new Sample(angleToVec((float)Hue*6.28f), 1.0f, 1.0f);
+            SampleVec[] samples;
+            var basis = new SampleVec(AngleToVec((float)Hue * 6.28f), 1f, 1f);
             switch(Mode){
                 case ColorGenMode.Complementary:
                     samples = Complementary(basis);
@@ -196,7 +233,6 @@ namespace Fuse.Colors{
 
                 _palette[i] = float4(clr, 1.0f);
             }
-
             OnPaletteChanged();
         }
 
@@ -207,7 +243,7 @@ namespace Fuse.Colors{
             }
             set{
                 _mode = value;
-                rebuild();
+                Rebuild();
             }
         }
 
@@ -218,7 +254,7 @@ namespace Fuse.Colors{
             set { 
                 _baseColor = value; 
                 _baseColorHSV = ColorSpace.RGB2HSV(_baseColor.X, _baseColor.Y, _baseColor.Z);
-                rebuild();
+                Rebuild();
             }
         }
 
@@ -229,7 +265,7 @@ namespace Fuse.Colors{
             }
             set{
                 _hue = value;
-                rebuild();
+                Rebuild();
             }
         }
 
@@ -240,50 +276,50 @@ namespace Fuse.Colors{
             }
             set{
                 _saturation = value;
-                rebuild();
+                Rebuild();
             }
         }
 
         float3 _gain;
         public float3 Gain{
             get{ return _gain; }
-            set{ _gain = value; rebuild(); }
+            set{ _gain = value; Rebuild(); }
         }
 
         public float GainR{
             get{ return _gain.X; }
-            set{ _gain.X = value; rebuild(); }
+            set{ _gain.X = value; Rebuild(); }
         }
 
         public float GainG{
             get{ return _gain.Y; }
-            set{ _gain.Y = value; rebuild(); }
+            set{ _gain.Y = value; Rebuild(); }
         }
 
         public float GainB{
             get{ return _gain.Z; }
-            set{ _gain.Z = value; rebuild(); }
+            set{ _gain.Z = value; Rebuild(); }
         }
 
         float3 _scale = float3(1.0f);
         public float3 Scale{
             get{ return _scale; }
-            set{ _scale = value; rebuild(); }
+            set{ _scale = value; Rebuild(); }
         }
 
         public float ScaleR{
             get{ return _scale.X; }
-            set{ _scale.X = value; rebuild(); }
+            set{ _scale.X = value; Rebuild(); }
         }
 
         public float ScaleG{
             get{ return _scale.Y; }
-            set{ _scale.Y = value; rebuild(); }
+            set{ _scale.Y = value; Rebuild(); }
         }
         
         public float ScaleB{
             get{ return _scale.Z; }
-            set{ _scale.Z = value; rebuild(); }
+            set{ _scale.Z = value; Rebuild(); }
         }
 
         double _value = 1.0;
@@ -293,11 +329,11 @@ namespace Fuse.Colors{
             }
             set{
                 _value = value;
-                rebuild();
+                Rebuild();
             }
         }
 
-        void OnPaletteChanged(){
+        void OnPaletteChanged() {
             OnPropertyChanged(_paletteName, this);
             OnPropertyChanged(_c1Name, this);
             OnPropertyChanged(_c2Name, this);
