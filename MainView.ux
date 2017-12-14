@@ -1,5 +1,6 @@
 <App>
-    <Fuse.Colors.Palette ux:Name="palette" />
+    <Fuse.Android.StatusBarConfig Color="Black"/>
+    <Fuse.Colors.Palette ux:Name="palette" BaseColor="#FCA311" />
     <ClientPanel>
         <Fuse.Colors.Editor Palette="palette"/>
     </ClientPanel>

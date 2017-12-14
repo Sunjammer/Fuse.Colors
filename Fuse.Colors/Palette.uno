@@ -118,6 +118,11 @@ namespace Fuse.Colors{
             return a;
 		}
 
+        override protected void OnRooted(){
+            Rebuild();
+            base.OnRooted();
+        }
+
         static object getSettings(Context c, Palette s, object[] args)
         {
             var ob = c.NewObject();

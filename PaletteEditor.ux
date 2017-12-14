@@ -96,11 +96,11 @@ console.log(`\n<Fuse.Colors.Palette
             </StackPanel>
 
             <Grid RowCount="5">
-                <Panel Color="Palette.C1"/>
-                <Panel Color="Palette.C1"/>
-                <Panel Color="Palette.C1"/>
-                <Panel Color="Palette.C1"/>
-                <Panel Color="Palette.C1"/>
+                <Panel Color="{ReadProperty Palette.C1}"/>
+                <Panel Color="{ReadProperty Palette.C2}"/>
+                <Panel Color="{ReadProperty Palette.C3}"/>
+                <Panel Color="{ReadProperty Palette.C4}"/>
+                <Panel Color="{ReadProperty Palette.C5}"/>
                 <Pressed>
                     <Callback Handler="{toggleState}"/>
                 </Pressed>
